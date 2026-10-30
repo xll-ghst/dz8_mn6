@@ -1,0 +1,36 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings.base
+      PRODUCTION: "False"
+      DEBUG: "True"
+      SECRET_KEY: "dev-only-change-this-secret-key"
+      GUNICORN_WORKERS: "2"
+      SQLITE_DB_PATH: /app/data/db.sqlite3
+    volumes:
+      - back_static:/app/back_static
+      - back_media:/app/back_media
+      - back_db:/app/data
+    expose:
+      - "8000"
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - back_static:/var/www/back_static:ro
+      - back_media:/var/www/back_media:ro
+
+volumes:
+  back_static:
+  back_media:
+  back_db:
